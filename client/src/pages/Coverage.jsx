@@ -1,7 +1,6 @@
 import React from 'react';
 import {useLoaderData} from 'react-router';
 import BangladeshMap from './BangladeshMap.jsx';
-
 const Coverage = () => {
     const serviceCenters = useLoaderData()
     // console.log(serviceCenters)
@@ -13,5 +12,4 @@ const Coverage = () => {
         </div>
     );
 };
-
 export default Coverage;

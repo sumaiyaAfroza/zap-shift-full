@@ -3,7 +3,7 @@ import axios from 'axios';
 
 
 const axiosSecure = axios.create({
-    baseURL: `http://localhost:3000`
+    baseURL: `https://zap-shift-full.vercel.app`
 })
 
 const useAxiosSecure = () => {

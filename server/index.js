@@ -82,7 +82,7 @@ async function run() {
     app.post('/payments', async (req, res) => {
       try {
         const { parcelId, amount, email, paymentMethod, transactionId } = req.body;
-        
+
            // 1. Update parcel's payment_status
                 const updateResult = await parcelCollection.updateOne(
                     { _id: new ObjectId(parcelId) },
@@ -116,6 +116,22 @@ async function run() {
           res.status(500).send({ message: 'Failed to record payment' });
       }
     });
+
+    // payment history er get  
+    app.get('/payments', async (req, res) => {
+            try {
+                const userEmail = req.query.email;
+
+                const query = userEmail ? { email: userEmail } : {};
+                const options = { sort: { paid_at: -1 } }; // Latest first
+
+                const payments = await paymentCollection.find(query, options).toArray();
+                res.send(payments);
+            } catch (error) {
+                console.error('Error fetching payment history:', error);
+                res.status(500).send({ message: 'Failed to get payments' });
+            }
+        });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });

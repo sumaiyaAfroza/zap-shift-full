@@ -24,10 +24,10 @@ const Login = () => {
                         <label className="label">Email</label>
                         <input
                             type="email"
-                            {...register('email')}
+                            {...register('email', {required: true})}
                             className="input" placeholder="Email" />
 
-
+                            
                         <label className="label">Password</label>
                         <input
                             type="password"

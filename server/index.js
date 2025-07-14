@@ -23,10 +23,46 @@ const client = new MongoClient(uri, {
 async function run() {
   const parcelCollection = client.db("parcelDB").collection("parcels");
   const paymentCollection = client.db("parcelDB").collection("payment");
+  const userCollection = client.db('parcelDB').collection('users')
 
+  // jwt token
+    const verifyFireBaseToken = async(req,res,next)=>{
+      const authHeader = req.headers.authorization 
+      // console.log(authHeader)
+      if(authHeader){
+        return res.status(401).send({message: "unauthorized access"})
+      }
+      const token = authHeader.split('')[1]
+      if(!token){
+        return res.status(401).send({message: "unauthorized access"})
+      }
+
+      try {
+        
+      } catch (error) {
+        
+      }
+      
+      next()
+    }
+
+  // register korara somoy ak email dia jeno bar bar na  hoi .
+  app.post('/users', async (req, res) => {
+            const email = req.body.email;
+            const userExists = await userCollection.findOne({ email })
+            if (userExists) {
+                // update last log in
+                return res.status(200).send({ message: 'User already exists', inserted: false });
+            }
+            const user = req.body;
+            const result = await userCollection.insertOne(user);
+            res.send(result);
+        })
   try {
-    // send parcel jonno
-    app.get("/parcels", async (req, res) => {
+
+
+    // send parcel jonno, pore gia my parcel hobe
+    app.get("/parcels",verifyFireBaseToken, async (req, res) => {
       const userEmail = req.query.email;
       const query = userEmail ? { created_by: userEmail } : {};
       const option = {

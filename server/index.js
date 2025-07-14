@@ -1,6 +1,10 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+
+const admin = require("firebase-admin");
+const serviceAccount = require("./firebase-sdk.json");
+
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const stripe = require("stripe")(process.env.PAYMENT_GATEWAY_KEY);
 const port = process.env.PORT || 3000;
@@ -9,8 +13,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@urmi-project.bsifax9.mongodb.net/?retryWrites=true&w=majority&appName=urmi-project`;
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@ema-john.ftku5dr.mongodb.net/?retryWrites=true&w=majority&appName=ema-john`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -21,29 +29,32 @@ const client = new MongoClient(uri, {
   },
 });
 async function run() {
+  try {
   const parcelCollection = client.db("parcelDB").collection("parcels");
   const paymentCollection = client.db("parcelDB").collection("payment");
   const userCollection = client.db('parcelDB').collection('users')
+  const ridersCollection = client.db('parcelDB').collection('riders')
+
 
   // jwt token
     const verifyFireBaseToken = async(req,res,next)=>{
       const authHeader = req.headers.authorization 
-      // console.log(authHeader)
-      if(authHeader){
+          // console.log(authHeader)
+      if(!authHeader){
         return res.status(401).send({message: "unauthorized access"})
       }
-      const token = authHeader.split('')[1]
+      const token = authHeader.split(' ')[1]
       if(!token){
         return res.status(401).send({message: "unauthorized access"})
       }
-
       try {
-        
-      } catch (error) {
-        
+        const decoded = await admin.auth().verifyIdToken(token)
+        req.decoded = decoded 
+        next()
+      } 
+      catch (error) {
+        console.log(error)
       }
-      
-      next()
     }
 
   // register korara somoy ak email dia jeno bar bar na  hoi .
@@ -58,12 +69,22 @@ async function run() {
             const result = await userCollection.insertOne(user);
             res.send(result);
         })
-  try {
+  
 
+// rider form ta post korar jonno
+app.post('/riders',async (req,res)=>{
+  const id = req.body
+  const result = await ridersCollection.insertOne(id)
+  res.send(result)
+})
 
     // send parcel jonno, pore gia my parcel hobe
     app.get("/parcels",verifyFireBaseToken, async (req, res) => {
       const userEmail = req.query.email;
+      // console.log(req.decoded)
+      if(req.decoded.email !== userEmail){
+        return  res.status(403).send({ message: 'forbidden access' })
+      }
       const query = userEmail ? { created_by: userEmail } : {};
       const option = {
         sort: { creation_date: -1 },
@@ -78,6 +99,7 @@ async function run() {
       const parcel = await parcelCollection.findOne({ _id: new ObjectId(id) });
       res.send(parcel);
     });
+
 
     app.post("/parcels", async (req, res) => {
       const newBody = req.body;
@@ -115,6 +137,8 @@ async function run() {
       }
     });
 
+
+    // my parcel er pay korar por unpaid ta pain hoye jabe tai post er modhei update kora hoise 
     app.post('/payments', async (req, res) => {
       try {
         const { parcelId, amount, email, paymentMethod, transactionId } = req.body;

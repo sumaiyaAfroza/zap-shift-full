@@ -78,6 +78,51 @@ app.post('/riders',async (req,res)=>{
   res.send(result)
 })
 
+// riders pending
+        app.get("/riders/pending", async (req, res) => {
+            try {
+                const pendingRiders = await ridersCollection
+                    .find({ status: "pending" })
+                    .toArray();
+
+                res.send(pendingRiders);
+            } catch (error) {
+                console.error("Failed to load pending riders:", error);
+                res.status(500).send({ message: "Failed to load pending riders" });
+            }
+        });
+
+
+        //pending riders er jonno approve , reject btn er api
+        app.patch("/riders/:id/status", async (req, res) => {
+            const { id } = req.params;
+            const { status } = req.body;
+            const query = { _id: new ObjectId(id) }
+            const updateDoc = {
+                $set:
+                {
+                    status
+                }
+            }
+            try {
+                const result = await ridersCollection.updateOne(
+                    query, updateDoc
+
+                );
+                res.send(result);
+            } catch (err) {
+                res.status(500).send({ message: "Failed to update rider status" });
+            }
+        });
+
+        
+        //  active Riders der active gula dekar jonno 
+        app.get("/riders/active", async (req, res) => {
+            const result = await ridersCollection.find({ status: "active" }).toArray();
+            res.send(result);
+        });
+
+
     // send parcel jonno, pore gia my parcel hobe
     app.get("/parcels",verifyFireBaseToken, async (req, res) => {
       const userEmail = req.query.email;
@@ -192,6 +237,11 @@ app.post('/riders',async (req,res)=>{
                 res.status(500).send({ message: 'Failed to get payments' });
             }
         });
+
+
+
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });

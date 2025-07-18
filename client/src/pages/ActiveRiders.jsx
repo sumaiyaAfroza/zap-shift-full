@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import { FaSearch, FaUserSlash } from "react-icons/fa";
-import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useAxiosSecure from "../hooks/useAxiosSecure";
+
 
 const ActiveRiders = () => {
   const axiosSecure = useAxiosSecure();
@@ -17,6 +18,7 @@ const ActiveRiders = () => {
     },
   });
 
+  
   // 🔴 Handle Deactivation
   const handleDeactivate = async (id) => {
     const confirm = await Swal.fire({

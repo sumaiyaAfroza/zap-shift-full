@@ -57,6 +57,17 @@ async function run() {
       }
     }
 
+// verifyAdmin
+     const verifyAdmin = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email }
+            const user = await userCollection.findOne(query);
+            if (!user || user.role !== 'admin') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            next();
+        }
+
   // register korara somoy ak email dia jeno bar bar na  hoi .
   app.post('/users', async (req, res) => {
             const email = req.body.email;
@@ -78,8 +89,9 @@ app.post('/riders',async (req,res)=>{
   res.send(result)
 })
 
+
 // riders pending
-        app.get("/riders/pending", async (req, res) => {
+        app.get("/riders/pending",verifyFireBaseToken,verifyAdmin, async (req, res) => {
             try {
                 const pendingRiders = await ridersCollection
                     .find({ status: "pending" })
@@ -92,11 +104,11 @@ app.post('/riders',async (req,res)=>{
             }
         });
 
-
-        //pending riders er jonno approve , reject btn er api
+        //  rider role
+        //pending riders er jonno approve , reject btn er api, status tao set kora hoise je kun role
         app.patch("/riders/:id/status", async (req, res) => {
             const { id } = req.params;
-            const { status } = req.body;
+            const { status,email } = req.body;
             const query = { _id: new ObjectId(id) }
             const updateDoc = {
                 $set:
@@ -109,15 +121,90 @@ app.post('/riders',async (req,res)=>{
                     query, updateDoc
 
                 );
+
+                if(status === 'active'){
+                  const useQuery = {email}
+                  const updateDoc = {
+                    $set:{
+                      role: 'rider'
+                    }
+                  }
+                  const roleResult = await userCollection.updateOne(useQuery,updateDoc)
+                  console.log(roleResult.modifiedCount);
+                }
                 res.send(result);
             } catch (err) {
                 res.status(500).send({ message: "Failed to update rider status" });
             }
         });
 
+
+        // users search
+        app.get('/users/search',async(req,res) => {
+          const emailQuery = req.query.email 
+          const regex = new RegExp(emailQuery, 'i')
+          try {
+            const users = await userCollection.find({
+              email: {
+                $regex: regex
+              }
+            }).limit(10).toArray()
+            res.send(users)
+          } catch (error) {
+            console.error("Error searching users", error);
+                res.status(500).send({ message: "Error searching users" });
+          }
+        }
+          
+        ) 
+
+
+// admin role set korar jonno
+         app.patch("/users/:id/role",verifyFireBaseToken,verifyAdmin, async (req, res) => {
+            const { id } = req.params;
+            const { role } = req.body; 
+
+            if (!["admin", "user"].includes(role)) {
+                return res.status(400).send({ message: "Invalid role" });
+            }
+
+            try {
+                const result = await userCollection.updateOne(
+                    { _id: new ObjectId(id) },
+                    { $set: { role } }
+                );
+                res.send({ message: `User role updated to ${role}`, result });
+            } catch (error) {
+                console.error("Error updating user role", error);
+                res.status(500).send({ message: "Failed to update user role" });
+            }
+        });
+
+ // GET: Get user role by email
+        app.get('/users/:email/role', async (req, res) => {
+            try {
+                const email = req.params.email;
+
+                if (!email) {
+                    return res.status(400).send({ message: 'Email is required' });
+                }
+
+                const user = await usersCollection.findOne({ email });
+
+                if (!user) {
+                    return res.status(404).send({ message: 'User not found' });
+                }
+
+                res.send({ role: user.role || 'user' });
+            } catch (error) {
+                console.error('Error getting user role:', error);
+                res.status(500).send({ message: 'Failed to get role' });
+            }
+        });
+
         
         //  active Riders der active gula dekar jonno 
-        app.get("/riders/active", async (req, res) => {
+        app.get("/riders/active",verifyFireBaseToken,verifyAdmin, async (req, res) => {
             const result = await ridersCollection.find({ status: "active" }).toArray();
             res.send(result);
         });
@@ -166,6 +253,7 @@ app.post('/riders',async (req,res)=>{
         res.status(500).send({ message: "Failed to delete parcel" });
       }
     });
+
 
     //  payment cent korte
     app.post("/create-payment-intent", async (req, res) => {
@@ -237,10 +325,6 @@ app.post('/riders',async (req,res)=>{
                 res.status(500).send({ message: 'Failed to get payments' });
             }
         });
-
-
-
-
 
 
     // Send a ping to confirm a successful connection

@@ -1,14 +1,13 @@
-import React from 'react';
+import React, { Children } from 'react';
 import useAuth from '../hooks/useAuth';
 import useUserRole from '../hooks/useUserRole';
 import { Navigate } from 'react-router';
 
-const AdminRoute = ({children}) => {
+const AdminRoute = ({ children }) => {
+    const { user, loading } = useAuth();
+    const { role, roleLoading } = useUserRole();
 
-    const {user, loading} = useAuth()
-    const {role, roleLoading} = useUserRole()
-
-     if (loading || roleLoading) {
+    if (loading || roleLoading) {
         return <span className="loading loading-spinner loading-xl"></span>
     }
 
@@ -16,7 +15,7 @@ const AdminRoute = ({children}) => {
         return <Navigate state={{ from: location.pathname }} to="/forbidden"></Navigate>
     }
 
-    return children
+    return children;
 };
 
 export default AdminRoute;

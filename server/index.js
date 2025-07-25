@@ -184,12 +184,12 @@ app.post('/riders',async (req,res)=>{
         app.get('/users/:email/role', async (req, res) => {
             try {
                 const email = req.params.email;
-
+                console.log(email);
                 if (!email) {
                     return res.status(400).send({ message: 'Email is required' });
                 }
 
-                const user = await usersCollection.findOne({ email });
+                const user = await userCollection.findOne({ email });
 
                 if (!user) {
                     return res.status(404).send({ message: 'User not found' });
@@ -345,6 +345,3 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`parcel is running on port ${port}`);
 });
-
-
-

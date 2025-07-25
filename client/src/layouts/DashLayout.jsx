@@ -96,6 +96,12 @@ const DashboardLayout = () => {
                             Make Admin
                         </NavLink>
                     </li>
+                    <li>
+                        <NavLink to="/dashboard/assign-rider">
+                            <FaUserClock className="inline-block mr-2" />
+                            Assign Rider
+                        </NavLink>
+                    </li>
                     </>
                     } 
                 </ul>

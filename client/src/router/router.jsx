@@ -13,14 +13,12 @@ import Payment from "../pages/Payment.jsx";
 import PaymentHistory from "../pages/PaymentHistory.jsx";
 import TrackParcel from "../pages/TrackParcel.jsx";
 import BeARider from "../pages/BeARider.jsx";
-
-
-
 import Forbidden from "../Forbidden.jsx";
 import AdminRoute from "../routes/AdminRoute.jsx";
 import PendingRiders from "../pages/PendingRiders.jsx";
 import ActiveRiders from "../pages/ActiveRiders.jsx";
 import MakeAdmin from "../pages/MakeAdmin.jsx";
+import AssignRider from "../pages/AssignRider.jsx";
 
 
 export const router = createBrowserRouter([
@@ -88,18 +86,22 @@ export const router = createBrowserRouter([
       Component: TrackParcel
     },
 
-    // riders
+    // riders 
       {
         path: 'pending-riders',
         element: <AdminRoute> <PendingRiders></PendingRiders> </AdminRoute>
       },
       {
         path: 'active-riders',
-       element: <AdminRoute> <ActiveRiders></ActiveRiders>  </AdminRoute>
+       element: <AdminRoute> <ActiveRiders></ActiveRiders> </AdminRoute>
       },
       {
         path:'makeAdmin',
         element: <AdminRoute> <MakeAdmin></MakeAdmin> </AdminRoute>
+      },
+      {
+        path: 'assign-rider',
+        element: <AdminRoute> <AssignRider></AssignRider></AdminRoute>
       }
 
    ]

@@ -90,7 +90,7 @@ const SendParcel = () => {
                     tracking_id: generateTrackingID(),
                 };
 
-                // console.log("Ready for payment:", parcelData);
+                console.log("Ready for payment:", parcelData);
                 
                  axiosSecure.post('/parcels', parcelData)
                     .then(res => {
@@ -218,7 +218,7 @@ const SendParcel = () => {
                                 }
 
                             </select>
-                            <select  className="select select-bordered w-full">
+                            <select {...register("receiver_center", { required: true })}  className="select select-bordered w-full">
                                 <option value="">Select Service Center</option>
                                 {
                                     getDistrictsByRegion(receiverRegion).map(district =>

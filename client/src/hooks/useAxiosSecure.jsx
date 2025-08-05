@@ -31,12 +31,8 @@ const useAxiosSecure = () => {
                 })
                 .catch(() => { })
         }
-
         return Promise.reject(error);
     })
-
-
     return axiosSecure;
 };
-
 export default useAxiosSecure;

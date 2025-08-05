@@ -180,6 +180,7 @@ app.post('/riders',async (req,res)=>{
             }
         });
 
+
  // GET: Get user role by email
         app.get('/users/:email/role', async (req, res) => {
             try {
@@ -210,20 +211,127 @@ app.post('/riders',async (req,res)=>{
         });
 
 
+// available rider gula
+app.get('/riders/available', async (req,res)=>{
+  const {district} = req.query
+  try {
+    const riders = await ridersCollection.find({district}).toArray()
+    res.send(riders)    
+  } catch (error) {
+    res.status(500).send({message: 'failed to load riders'})
+    
+  }
+})
+
+
     // send parcel jonno, pore gia my parcel hobe
-    app.get("/parcels",verifyFireBaseToken, async (req, res) => {
-      const userEmail = req.query.email;
-      // console.log(req.decoded)
-      if(req.decoded.email !== userEmail){
-        return  res.status(403).send({ message: 'forbidden access' })
+    app.get("/parcels", async (req, res) => {
+
+      const {email,payment_status,delivery_status} = req.query;
+
+      const query =  {};
+      if(email){
+        query: { 
+            created_by: email
+        }
       }
-      const query = userEmail ? { created_by: userEmail } : {};
+      if(payment_status){
+        query.payment_status = payment_status
+      }
+      if(delivery_status){
+        query.delivery_status= delivery_status
+      }
+
       const option = {
         sort: { creation_date: -1 },
       };
+
+      console.log('parcel query', req.query, query)
+
       const result = await parcelCollection.find(query, option).toArray();
       res.send(result);
     });
+
+
+    
+    // app.patch("/parcels/:id/assign", async (req, res) => {
+    //   const parcelId = req.params.id;
+    //   const { riderId, riderName } = req.body;
+
+    // // console.log(riderId, riderName );
+    //   const filter = {_id: new ObjectId(parcelId)}
+    //   const updateDoc = {
+    //     $set:{
+    //       delivery_status: "in_transit",
+    //       assigned_rider_id: riderId,
+    //       assigned_rider_name: riderName,
+    //     },
+    //   }
+
+    //   try {
+    //     await parcelCollection.updateOne(filter,updateDoc)
+
+
+    //     const filter = {_id: new ObjectId(riderId)}
+    //     const updateDoc = {
+    //       $set:{
+    //         status: "in_delivery"
+    //       },
+    //     }
+
+    //     await parcelCollection.updateOne(filter,updateDoc)
+    //     res.send({message:" rider assigned"})
+
+        
+    //   } catch (err) {
+    //     console.error(err);
+    //     res.status(500).send({ message: "Failed to assign rider" });
+    // }
+
+    // })
+
+
+
+// assignRider er patch
+    app.patch("/parcels/:id/assign", async (req, res) => {
+      const parcelId = req.params.id;
+      const { riderId, riderName } = req.body;
+
+      try {
+          // Update parcel
+          await parcelCollection.updateOne(
+              { _id: new ObjectId(parcelId) },
+              {
+                  $set: {
+                      delivery_status: "in_transit",
+                      assigned_rider_id: riderId,
+                      assigned_rider_name: riderName,
+                  },
+              }
+          );
+
+          // Update rider
+          await ridersCollection.updateOne(
+              { _id: new ObjectId(riderId) },
+              {
+                  $set: {
+                      work_status: "in_delivery",
+                  },
+              }
+          );
+
+          res.send({ message: "Rider assigned" });
+      } catch (err) {
+          console.error(err);
+          res.status(500).send({ message: "Failed to assign rider" });
+      }
+  });
+
+
+
+
+
+
 
     //  payment id paiar jono
     app.get("/parcels/:id", async (req, res) => {

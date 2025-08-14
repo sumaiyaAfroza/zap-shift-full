@@ -2,6 +2,7 @@ import React from 'react';
 import useAxiosSecure from '../hooks/useAxiosSecure';
 import useAuth from '../hooks/useAuth';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import Swal from 'sweetalert2';
 
 
 const PendingDelivery = () => {
@@ -25,19 +26,38 @@ const PendingDelivery = () => {
                 return result.data;
         },
     });
-    
+
 
     const {mutateAsync: updateStatus } = useMutation({
-        mutationFn: async (parcel, status) => {
+        mutationFn: async ({parcel, status}) => {
             const result = await axiosSecure.patch(`/parcels/${parcel._id}/status`,{
                 status
             })
+            console.log(result.data);
             return result.data
         },
         onSuccess:()=>{
             queryClient.invalidateQueries(['riderParcels', user?.email])
         }
     })
+
+    const handleStatusUpdate = async (parcel,newStatus)=>{
+        // console.log(parcel,newStatus);
+        Swal.fire({
+            title: "Are you sure?",
+            text: `Mark parcel as ${newStatus.replace("_", " ")}?`,
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Yes, update",
+        }).then(result => {
+            if(result.isConfirmed){
+              updateStatus({parcel, status: newStatus}).then( ()=>{
+                 Swal.fire("Updated!", "Parcel status updated.", "success");
+              })
+            }
+        })
+    }
+
 
     return (
         <div className="p-6">
@@ -75,9 +95,9 @@ const PendingDelivery = () => {
                                         {parcel.delivery_status === "rider_assigned" && (
                                             <button
                                                 className="btn btn-sm btn-primary text-black"
-                                                // onClick={() =>
-                                                //     handleStatusUpdate(parcel, "in_transit")
-                                                // }
+                                                onClick={() =>
+                                                    handleStatusUpdate(parcel, "in_transit")
+                                                }
                                             >
                                                 Mark Picked Up
                                             </button>
@@ -85,9 +105,9 @@ const PendingDelivery = () => {
                                         {parcel.delivery_status === "in_transit" && (
                                             <button
                                                 className="btn btn-sm btn-success text-black"
-                                                // onClick={() =>
-                                                //     handleStatusUpdate(parcel, "delivered")
-                                                // }
+                                                onClick={() =>
+                                                    handleStatusUpdate(parcel, "delivered")
+                                                }
                                             >
                                                 Mark Delivered
                                             </button>

@@ -117,7 +117,9 @@ async function run() {
 
         const query = {
           assigned_rider_email: email,
-          delivery_status: { $in: ["rider_assigned"] },
+          delivery_status: {
+             $in: ["rider_assigned", "in_transit"]
+             },
         };
 
         const options = {
@@ -132,6 +134,7 @@ async function run() {
       }
     });
 
+    // pending delivery er update
     app.patch("/parcels/:id/status", async (req, res) => {
       const parcelId = req.params.id;
       const { status } = req.body;
@@ -271,8 +274,8 @@ async function run() {
     });
 
     //  active Riders der active gula dekar jonno
-    app.get(
-      "/riders/active",
+    app.get("/riders/active",
+      
       verifyFireBaseToken,
       verifyAdmin,
       async (req, res) => {

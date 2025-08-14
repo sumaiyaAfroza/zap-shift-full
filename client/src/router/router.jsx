@@ -19,6 +19,7 @@ import PendingRiders from "../pages/PendingRiders.jsx";
 import ActiveRiders from "../pages/ActiveRiders.jsx";
 import MakeAdmin from "../pages/MakeAdmin.jsx";
 import AssignRider from "../pages/AssignRider.jsx";
+import PendingDelivery from "../pages/PendingDelivery.jsx";
 
 
 export const router = createBrowserRouter([
@@ -85,8 +86,12 @@ export const router = createBrowserRouter([
       path:'trackParcel',
       Component: TrackParcel
     },
+    {
+      path:'pending-deliveries',
+      element: <PendingDelivery></PendingDelivery>
+    },
 
-    // riders 
+    // admin 
       {
         path: 'pending-riders',
         element: <AdminRoute> <PendingRiders></PendingRiders> </AdminRoute>

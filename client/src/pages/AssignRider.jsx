@@ -25,10 +25,11 @@ const AssignRider = () => {
         mutationFn: async ({parcelId,rider})=>{
             const result = await axiosSecure.patch(`/parcels/${parcelId}/assign`,{
                 riderId: rider._id,
-                riderName: rider.name
-
+                riderName: rider.name,
+                riderEmail: rider.email  
             })
-           console.log(result.data); 
+            return result.data
+        //    console.log(result.data); 
         },
         onSuccess:()=>{
             queryClient.invalidateQueries(['assignableParcels'])

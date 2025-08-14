@@ -1,7 +1,7 @@
 import React from 'react';
 import {useForm} from 'react-hook-form';
 import useAuth from '../hooks/useAuth.jsx';
-import {useLoaderData} from 'react-router';
+import {useLoaderData, useNavigate} from 'react-router';
 import Swal from 'sweetalert2';
 import useAxiosSecure from '../hooks/useAxiosSecure.jsx';
 
@@ -16,6 +16,7 @@ const SendParcel = () => {
     const {register, handleSubmit, watch, formState: {errors}} = useForm()
     const {user} = useAuth()
     const axiosSecure = useAxiosSecure()
+    const navigate = useNavigate()
     const parcelType = watch('type')
     const senderRegion = watch('sender_region')
     const receiverRegion = watch("receiver_region");
@@ -104,6 +105,7 @@ const SendParcel = () => {
                                 timer: 1500,
                                 showConfirmButton: false,
                             });
+                            navigate('/dashboard/myParcels')
                         }
                     })
             }

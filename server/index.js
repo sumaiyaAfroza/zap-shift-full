@@ -89,10 +89,7 @@ async function run() {
     });
 
     // riders pending
-    app.get(
-      "/riders/pending",
-      verifyFireBaseToken,
-      verifyAdmin,
+    app.get(  "/riders/pending", verifyFireBaseToken, verifyAdmin,
       async (req, res) => {
         try {
           const pendingRiders = await ridersCollection
@@ -134,6 +131,36 @@ async function run() {
       }
     });
 
+    // completed delivery- jara delivery ses korse tader 
+    app.get('/rider/completed-parcels', async( req,res) => {
+        try {
+          const email = req.query.email
+          if(!email){
+            return res.status(400).send({message: ' rider email is required'})
+          }
+           const filter = {
+            assigned_rider_email: email,
+            delivery_status: {
+              $in: ['delivered']
+            }
+           }
+           const options = {
+            sort: {
+              creation_date: -1
+            }
+           }
+           const completedParcels = await parcelCollection.find(filter, options ).toArray()
+           res.send(completedParcels)
+           console.log(completedParcels);
+
+         }
+         catch (error) {
+          console.error('Error loading completed parcels:',error);
+          res.status(500).send({message: "[Failed to load completed deliveries]"})
+          
+        }
+    })
+
     // pending delivery er update
     app.patch("/parcels/:id/status", async (req, res) => {
       const parcelId = req.params.id;
@@ -141,7 +168,7 @@ async function run() {
       const updateDoc = {
         delivery_status: status,
       };
-      if (status === "rider-assigned") {
+      if (status === "in_transit") {
         updateDoc.picked_at = new Date().toISOString();
       } else if (status === "delivered") {
         updateDoc.delivery_at = new Date().toISOString();
@@ -494,6 +521,11 @@ async function run() {
         res.status(500).send({ message: "Failed to get payments" });
       }
     });
+
+
+
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });

@@ -84,6 +84,12 @@ const DashboardLayout = () => {
                             Pending Delivery
                         </NavLink>
                     </li>
+                         <li>
+                        <NavLink to="/dashboard/completed-deliveries">
+                        <FaTasks className="inline-block mr-2" />
+                            Completed Deliveries 
+                        </NavLink>
+                    </li>
                         </>
                     }
 

@@ -20,6 +20,8 @@ import ActiveRiders from "../pages/ActiveRiders.jsx";
 import MakeAdmin from "../pages/MakeAdmin.jsx";
 import AssignRider from "../pages/AssignRider.jsx";
 import PendingDelivery from "../pages/PendingDelivery.jsx";
+import RiderRoute from "../routes/RiderRoute.jsx";
+import CompletedDelivery from "../pages/CompletedDelivery.jsx";
 
 
 export const router = createBrowserRouter([
@@ -88,7 +90,11 @@ export const router = createBrowserRouter([
     },
     {
       path:'pending-deliveries',
-      element: <PendingDelivery></PendingDelivery>
+      element: <RiderRoute>  <PendingDelivery></PendingDelivery></RiderRoute>
+    },
+    {
+      path: 'completed-deliveries',
+      element: <RiderRoute> <CompletedDelivery></CompletedDelivery> </RiderRoute>
     },
 
     // admin 

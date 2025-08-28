@@ -1,11 +1,13 @@
 import React from 'react';
 import useAxiosSecure from '../hooks/useAxiosSecure';
 import useAuth from '../hooks/useAuth';
-import { useQuery } from '@tanstack/react-query';
+import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import Swal from "sweetalert2";
 
 const CompletedDelivery = () => {
     const axiosSecure = useAxiosSecure()
-    const {user} = useAuth() 
+    const {user} = useAuth()
+    const queryClient = useQueryClient()
 
     const {data: parcels= [], isLoading} = useQuery({
         queryKey:[ 'completedDelivery', user.email],
@@ -30,6 +32,37 @@ const CompletedDelivery = () => {
         else{
             return cost* 0.3
         }
+    }
+
+    const {mutateAsync: cashout} = useMutation({
+        mutationFn: async (parcelId) => {
+            const result = await axiosSecure.patch(`/parcels/${parcelId}/cashout`)
+            return result.data
+        },
+        onSuccess: ()=>{
+            queryClient.invalidateQueries(['completedDelivery'])
+        }
+    })
+    
+    const handleCashout = (parcelId) =>{
+        Swal.fire({
+            title: "Confirm Cashout",
+            text: "You are about to cash out this delivery.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, Cash Out",
+            cancelButtonText: "Cancel",
+        }).then(result => {
+            if(result.isConfirmed){
+                cashout(parcelId)
+                    .then(()=>{
+                        Swal.fire("Success", "Cashout completed.", "success");
+                    })
+                    .catch(()=>{
+                        Swal.fire("Error", "Failed to cash out. Try again.", "error");
+                    })
+            }
+        })
     }
 
 
@@ -75,6 +108,7 @@ const CompletedDelivery = () => {
                                         ) : (
                                             <button
                                                 className="btn btn-sm btn-warning"
+                                                onClick={()=> handleCashout(parcel._id)}
                                                 // onClick={() => handleCashout(parcel._id)}
                                             >
                                                 Cashout

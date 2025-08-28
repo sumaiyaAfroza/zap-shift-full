@@ -4,6 +4,7 @@ import useAuth from '../hooks/useAuth.jsx';
 import {useLoaderData, useNavigate} from 'react-router';
 import Swal from 'sweetalert2';
 import useAxiosSecure from '../hooks/useAxiosSecure.jsx';
+import UseTrackingLogger from '../hooks/useTrackingLogger.jsx';
 
 const generateTrackingID = () => {
     const date = new Date()
@@ -21,6 +22,7 @@ const SendParcel = () => {
     const senderRegion = watch('sender_region')
     const receiverRegion = watch("receiver_region");
     const serviceCenters = useLoaderData()
+    const {logTracking} = UseTrackingLogger()
     const getDistrictsByRegion = region =>
         serviceCenters.filter(w => w.region === region).map(w => w.district)
 
@@ -81,6 +83,7 @@ const SendParcel = () => {
             },
         }).then((result) => {
             if (result.isConfirmed) {
+                const tracking_id = generateTrackingID()
                 const parcelData = {
                     ...data,
                     cost: totalCost,
@@ -88,13 +91,13 @@ const SendParcel = () => {
                     payment_status: 'unpaid',
                     delivery_status: 'not_collected',
                     creation_date: new Date().toISOString(),
-                    tracking_id: generateTrackingID(),
+                    tracking_id: tracking_id,
                 };
 
                 console.log("Ready for payment:", parcelData);
                 
                  axiosSecure.post('/parcels', parcelData)
-                    .then(res => {
+                    .then( async res => {
                         console.log(res.data);
                         if (res.data.insertedId) {
                             // TODO: redirect to a payment page 
@@ -105,6 +108,14 @@ const SendParcel = () => {
                                 timer: 1500,
                                 showConfirmButton: false,
                             });
+
+                            await logTracking ({
+                                tracking_id: parcelData.tracking_id,
+                                 status: 'parcel is created',
+                                  details: `created by ${user.displayName}`,
+                                 update_by: user.email
+                            })
+
                             navigate('/dashboard/myParcels')
                         }
                     })

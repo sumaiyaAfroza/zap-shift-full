@@ -3,13 +3,19 @@ import useAxiosSecure from '../hooks/useAxiosSecure';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query'
 import { FaMotorcycle } from 'react-icons/fa';
 import Swal from 'sweetalert2';
+import useTrackingLogger from "../hooks/useTrackingLogger.jsx";
+import useAuth from "../hooks/useAuth.jsx";
+
 
 const AssignRider = () => {
     const axiosSecure = useAxiosSecure()
     const queryClient = useQueryClient()
     const [selectedParcel, setSelectedParcel] = useState(null);
+    const [selectedRider, setSelectedRider] = useState(null);
     const [riders, setRiders] = useState([]);
     const [loadingRiders, setLoadingRiders] = useState(false);
+    const {logTracking} = useTrackingLogger();
+    const {user} = useAuth()
 
     const {data: parcels=[],isLoading} = useQuery({
         queryKey:['assignableParcels'],
@@ -17,12 +23,13 @@ const AssignRider = () => {
             const result = await axiosSecure.get('/parcels?payment_status=paid&delivery_status=not_collected')
             return result.data
         }
-
     })
     // console.log(parcels);
  
+
     const {mutateAsync: assignRider} = useMutation({
         mutationFn: async ({parcelId,rider})=>{
+            setSelectedRider(rider)
             const result = await axiosSecure.patch(`/parcels/${parcelId}/assign`,{
                 riderId: rider._id,
                 riderName: rider.name,
@@ -31,10 +38,18 @@ const AssignRider = () => {
             return result.data
         //    console.log(result.data); 
         },
-        onSuccess:()=>{
-            queryClient.invalidateQueries(['assignableParcels'])
-            Swal.fire("Success", "Rider assigned successfully!", "success");
+        onSuccess:async ()=>{
+            await queryClient.invalidateQueries(['assignableParcels'])
+            await Swal.fire("Success", "Rider assigned successfully!", "success");
+            await logTracking ({
+                tracking_id: selectedParcel.tracking_id,
+                status: 'assigned rider',
+                details: `assigne to ${selectedRider.name}`,
+                update_by: user.email
+            });
+
             document.getElementById("assignModal").close();
+
         },
         onError: () => {
             Swal.fire("Error", "Failed to assign rider", "error");
@@ -52,7 +67,6 @@ const AssignRider = () => {
                 }
             })
             setRiders(result.data)
-            
         } catch (error) {
             console.error("Error fetching riders", error);
             Swal.fire("Error", "Failed to load riders", "error");
@@ -67,7 +81,6 @@ const AssignRider = () => {
     return (
         <div className="p-6">
             <h2 className="text-2xl font-bold mb-4">Assign Rider to Parcels</h2>
-
                  {
                     isLoading ?
                      ( <p>Loading parcels...</p>)
@@ -173,13 +186,7 @@ const AssignRider = () => {
                     </dialog>
                     </div>
                      )
-
-                 }
-               
-                
-
-              
-
+                 }  
         </div>
     );
 };

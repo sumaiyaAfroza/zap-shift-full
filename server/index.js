@@ -6,6 +6,7 @@ const admin = require("firebase-admin");
 const serviceAccount = require("./firebase-sdk.json");
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const { refreshToken } = require("firebase-admin/app");
 const stripe = require("stripe")(process.env.PAYMENT_GATEWAY_KEY);
 const port = process.env.PORT || 3000;
 const app = express();
@@ -33,6 +34,8 @@ async function run() {
     const paymentCollection = client.db("parcelDB").collection("payment");
     const userCollection = client.db("parcelDB").collection("users");
     const ridersCollection = client.db("parcelDB").collection("riders");
+    const trackingCollection = client.db("parcelDB").collection("tracking");
+
 
     // jwt token
     const verifyFireBaseToken = async (req, res, next) => {
@@ -188,6 +191,20 @@ async function run() {
       }
     });
 
+    // cash out completed delivery er tk nibe rider
+      app.patch('/parcels/:id/cashout', async (req,res) =>{
+          const id = req.params.id
+          const filter = { _id: new ObjectId(id) }
+          const updateDoc = {
+              $set: {
+                  cashout_status : 'cashed_out',
+                  cashout_at : new Date()
+              }
+          }
+          const result = await parcelCollection.updateOne(filter,updateDoc)
+          res.send(result)
+      })
+
     // GET: Get all parcels for a rider
     app.get("/rider/:id/parcels", async (req, res) => {
       const { id } = req.params;
@@ -253,11 +270,7 @@ async function run() {
     });
 
     // admin role set korar jonno
-    app.patch(
-      "/users/:id/role",
-      verifyFireBaseToken,
-      verifyAdmin,
-      async (req, res) => {
+    app.patch("/users/:id/role", verifyFireBaseToken,  verifyAdmin, async (req, res) => {
         const { id } = req.params;
         const { role } = req.body;
 
@@ -301,11 +314,7 @@ async function run() {
     });
 
     //  active Riders der active gula dekar jonno
-    app.get("/riders/active",
-      
-      verifyFireBaseToken,
-      verifyAdmin,
-      async (req, res) => {
+    app.get("/riders/active",verifyFireBaseToken,  verifyAdmin,  async (req, res) => {
         const result = await ridersCollection
           .find({ status: "active" })
           .toArray();
@@ -522,7 +531,28 @@ async function run() {
       }
     });
 
+    // tracking
+    app.get('/tracking/:trackingId', async(req,res)=>{
+      const id = req.params.trackingId
+      const filter = {
+        tracking_id : id
+      }
+      const updates = await trackingCollection.find(filter).sort({timestamp: 1}).toArray()
+      res.json(updates)
+    })
 
+
+    app.post('/tracking' , async (req, res) =>{
+      const update = req.body
+      update.timestamp = new Date()
+      if(!update.tracking_id || !update.status){
+        return res.status(400).json({message : 'tracking id and status are required'})
+      }
+      const result = await trackingCollection.insertOne(update)
+      res.status(201).json(result)
+
+      console.log(result);
+    })
 
 
 

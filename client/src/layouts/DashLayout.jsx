@@ -90,6 +90,12 @@ const DashboardLayout = () => {
                             Completed Deliveries 
                         </NavLink>
                     </li>
+                         <li>
+                        <NavLink to="/dashboard/my-earnings">
+                        <FaTasks className="inline-block mr-2" />
+                            My Earnings 
+                        </NavLink>
+                    </li>
                         </>
                     }
 

@@ -68,6 +68,17 @@ async function run() {
       next();
     };
 
+    // verifyARider
+    const verifyRider = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email };
+      const user = await userCollection.findOne(query);
+      if (!user || user.role !== "rider") {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next();
+    };
+
     // register korara somoy ak email dia jeno bar bar na  hoi .
     app.post("/users", async (req, res) => {
       const email = req.body.email;
@@ -92,8 +103,7 @@ async function run() {
     });
 
     // riders pending
-    app.get(  "/riders/pending", verifyFireBaseToken, verifyAdmin,
-      async (req, res) => {
+    app.get(  "/riders/pending", verifyFireBaseToken, verifyAdmin,async (req, res) => {
         try {
           const pendingRiders = await ridersCollection
             .find({ status: "pending" })
@@ -108,7 +118,7 @@ async function run() {
     );
 
     // GET: Get pending delivery tasks for a rider---------------------------------------------
-    app.get("/rider/parcels", async (req, res) => {
+    app.get("/rider/parcels",verifyFireBaseToken,verifyRider, async (req, res) => {
       try {
         const email = req.query.email;
         if (!email) {
@@ -135,7 +145,7 @@ async function run() {
     });
 
     // completed delivery- jara delivery ses korse tader 
-    app.get('/rider/completed-parcels', async( req,res) => {
+    app.get('/rider/completed-parcels',verifyFireBaseToken,verifyRider, async( req,res) => {
         try {
           const email = req.query.email
           if(!email){
@@ -539,7 +549,7 @@ async function run() {
     });
 
     // payment history er get
-    app.get("/payments", async (req, res) => {
+    app.get("/payments",verifyFireBaseToken async (req, res) => {
       try {
         const userEmail = req.query.email;
 

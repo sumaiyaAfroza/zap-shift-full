@@ -3,12 +3,14 @@ import useAxiosSecure from '../hooks/useAxiosSecure';
 import useAuth from '../hooks/useAuth';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Swal from 'sweetalert2';
+import UseTrackingLogger from "../hooks/useTrackingLogger.jsx";
 
 
 const PendingDelivery = () => {
     const axiosSecure = useAxiosSecure()
     const {user} = useAuth()
     const queryClient = useQueryClient()
+    const {logTracking} = UseTrackingLogger()
 
     const {
         data: parcels = [],
@@ -25,7 +27,7 @@ const PendingDelivery = () => {
                 });
                 return result.data;
         },
-    });
+    })
 
 
     const {mutateAsync: updateStatus } = useMutation({
@@ -37,7 +39,7 @@ const PendingDelivery = () => {
             return result.data
         },
         onSuccess:()=>{
-            queryClient.invalidateQueries(['riderParcels', user?.email])
+            queryClient.invalidateQueries(["riderParcels"])
         }
     })
 
@@ -51,8 +53,19 @@ const PendingDelivery = () => {
             confirmButtonText: "Yes, update",
         }).then(result => {
             if(result.isConfirmed){
-              updateStatus({parcel, status: newStatus}).then( ()=>{
+              updateStatus({parcel, status: newStatus}).then( async ()=>{
                  Swal.fire("Updated!", "Parcel status updated.", "success");
+                 let trackingDetails = `picked up by ${user.displayName}`
+
+                 if(newStatus === "delivered") {
+                     trackingDetails = `Delivered By ${user.displayName}`
+                     await logTracking ({
+                         tracking_id: parcel.tracking_id,
+                         status: newStatus,
+                         details: trackingDetails,
+                         update_by: user.email
+                     })
+                 }
               })
             }
         })

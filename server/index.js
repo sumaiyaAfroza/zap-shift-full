@@ -1,18 +1,20 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-
 const admin = require("firebase-admin");
+const dotenv = require('dotenv')
+dotenv.config()
 const serviceAccount = require("./firebase-sdk.json");
-
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const { refreshToken } = require("firebase-admin/app");
 const stripe = require("stripe")(process.env.PAYMENT_GATEWAY_KEY);
+const express = require("express");
+const cors = require("cors");
 const port = process.env.PORT || 3000;
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+const decodedKey = Buffer.from(process.env.FB_KEY, 'base64').toString('utf8')
+const serviceAccounts = JSON.parse(decodedKey)
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -30,6 +32,8 @@ const client = new MongoClient(uri, {
 });
 async function run() {
   try {
+
+
     const parcelCollection = client.db("parcelDB").collection("parcels");
     const paymentCollection = client.db("parcelDB").collection("payment");
     const userCollection = client.db("parcelDB").collection("users");
@@ -591,10 +595,10 @@ async function run() {
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // await client.db("admin").command({ ping: 1 });
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
   }

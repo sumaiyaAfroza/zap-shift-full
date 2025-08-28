@@ -360,6 +360,29 @@ async function run() {
       res.send(result);
     });
 
+    // status gular count kora. kunta koyta hoise . sei onuojai
+    app.get('/parcels/delivery/status-count', async (req, res) =>{
+        const pipeline = [
+            {
+                $group: {
+                    _id: '$delivery_status',
+                    count: {
+                        $sum: 1
+                    }
+                }
+            },
+            {
+                $project: {
+                    status:'$_id',
+                    count: 1,
+                    _id: 0
+                }
+            }
+        ]
+        const result = await parcelCollection.aggregate(pipeline).toArray()
+        res.send(result)
+    })
+
     // app.patch("/parcels/:id/assign", async (req, res) => {
     //   const parcelId = req.params.id;
     //   const { riderId, riderName } = req.body;

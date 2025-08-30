@@ -5,7 +5,7 @@ import {useNavigate} from 'react-router';
 
 
 const axiosSecure = axios.create({
-    baseURL: `http://localhost:3000`
+    baseURL: `https://zap-shift-full-qik9.vercel.app`
 });
 
 const useAxiosSecure = () => {
@@ -54,7 +54,7 @@ export default useAxiosSecure;
 // import { useNavigate } from 'react-router';
 //
 // const axiosSecure = axios.create({
-//     baseURL: `http://localhost:3000`
+//     baseURL: `https://zap-shift-full-qik9.vercel.app`
 // });
 //
 // const useAxiosSecure = () => {

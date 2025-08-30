@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 const dotenv = require('dotenv')
 dotenv.config()
-const serviceAccount = require("./firebase-sdk.json");
+
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const { refreshToken } = require("firebase-admin/app");
 const stripe = require("stripe")(process.env.PAYMENT_GATEWAY_KEY);
@@ -14,7 +14,7 @@ app.use(cors());
 app.use(express.json());
 
 const decodedKey = Buffer.from(process.env.FB_KEY, 'base64').toString('utf8')
-const serviceAccounts = JSON.parse(decodedKey)
+const serviceAccount = JSON.parse(decodedKey)
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -553,7 +553,7 @@ async function run() {
     });
 
     // payment history er get
-    app.get("/payments",verifyFireBaseToken async (req, res) => {
+    app.get("/payments",verifyFireBaseToken,  async (req, res) => {
       try {
         const userEmail = req.query.email;
 
@@ -590,8 +590,6 @@ async function run() {
 
       console.log(result);
     })
-
-
 
 
     // Send a ping to confirm a successful connection
